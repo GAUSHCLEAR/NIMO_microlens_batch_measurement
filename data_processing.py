@@ -1,17 +1,16 @@
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
-import os
 from scipy.ndimage import label
 import cv2
 from sklearn.cluster import KMeans
+import numpy as np
 
-def read_data(filename,blank_value=-15):
-    data = pd.read_csv(filename, header=None, skiprows=1)
-    data = data.values
-    data[:,0]=np.NaN
-    data[0,:]=np.NaN
-    data[data<blank_value] = np.NaN
+
+def read_data(filename, blank_value=-15):
+    data = np.loadtxt(filename, delimiter=',', skiprows=1)
+    data[:, 0] = np.NaN
+    data[0, :] = np.NaN
+    data[data < blank_value] = np.NaN
     return data
 def detect_edge(data,threshold=0.8):
     gradient_x, gradient_y = np.gradient(data)
