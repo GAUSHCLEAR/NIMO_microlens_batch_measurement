@@ -4,6 +4,8 @@ from scipy.ndimage import label
 import cv2
 from sklearn.cluster import KMeans
 import numpy as np
+from scipy.optimize import minimize
+
 
 
 def read_data(filename, blank_value=-15):
@@ -47,19 +49,106 @@ def microlens_centers_radius(regions):
         microlens.append({"center": center, "radius": radius})
     return microlens
 
+def rename_labels(sorted_microlens_params):
+    # Find all unique ring values
+    unique_rings = sorted(set(param["ring"] for param in sorted_microlens_params))
+
+    # Create a mapping from old ring values to new ones
+    ring_mapping = {old: new for new, old in enumerate(unique_rings, start=1)}
+
+    # Update the ring values
+    for param in sorted_microlens_params:
+        param["ring"] = ring_mapping[param["ring"]]
+
+    return sorted_microlens_params
+
+import numpy as np
+import random
+from collections import Counter
+import matplotlib.pyplot as plt
+
+def distance(p1, p2):
+    """Calculate the Euclidean distance between two points."""
+    return np.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
+
+def calculate_circle_center_from_three_points(p1, p2, p3):
+    """Calculate the center of a circle passing through three points."""
+    A = np.array([
+        [2 * (p1[0] - p3[0]), 2 * (p1[1] - p3[1])],
+        [2 * (p2[0] - p3[0]), 2 * (p2[1] - p3[1])]
+    ])
+    b = np.array([
+        p1[0]**2 - p3[0]**2 + p1[1]**2 - p3[1]**2,
+        p2[0]**2 - p3[0]**2 + p2[1]**2 - p3[1]**2
+    ])
+    try:
+        center = np.linalg.solve(A, b)
+        return center
+    except np.linalg.LinAlgError:
+        return None
+
+def find_concentric_circle_center(circle_centers, iterations=1000, radius_threshold=2, max_alpha=1.0,plot=False):
+    """Find the possible center of concentric circles from a set of points."""
+    def update_center_with_weight(centers, new_center):
+        """Update the list of centers with the new center, considering the radius threshold."""
+        for i, (center, weight) in enumerate(centers):
+            if distance(center, new_center) <= radius_threshold:
+                avg_center = weighted_average_point(center, weight, new_center, 1)
+                centers[i] = (avg_center, weight + 1)
+                return centers
+        centers.append((new_center, 1))
+        return centers
+
+    def weighted_average_point(p1, weight1, p2, weight2):
+        """Calculate the weighted average of two points."""
+        x = (p1[0] * weight1 + p2[0] * weight2) / (weight1 + weight2)
+        y = (p1[1] * weight1 + p2[1] * weight2) / (weight1 + weight2)
+        return (x, y)
+
+    weighted_centers = []
+    for _ in range(iterations):
+        selected_points = random.sample(circle_centers, 3)
+        center = calculate_circle_center_from_three_points(*selected_points)
+        if center is not None:
+            weighted_centers = update_center_with_weight(weighted_centers, center)
+
+    if plot:
+
+        # Plotting the results
+        plt.figure(figsize=(5, 5))
+        circle_centers_array = np.array(circle_centers)
+        plt.scatter(circle_centers_array[:, 0], circle_centers_array[:, 1], c='blue', label='Circle Centers')
+        for center, weight in weighted_centers:
+            alpha = min(0.1 + 0.1 * weight, max_alpha)
+            circle = plt.Circle(center, 1.5, color='red', alpha=alpha, fill=True)
+            plt.gca().add_artist(circle)
+        plt.axis('equal')
+        plt.xlabel('X coordinate')
+        plt.ylabel('Y coordinate')
+        plt.title('Possible Centers of Concentric Circles')
+        plt.legend()
+        plt.show()
+    top_weighted_centers = sorted(weighted_centers, key=lambda x: x[1], reverse=True)
+    return top_weighted_centers[0]
+
 def cluster_rings(microlens_params, microlenses,rings_number = 4):
     img_size=microlenses[0].shape
     centers = [microlens["center"] for microlens in microlens_params]
-    image_center = (img_size[0] // 2, img_size[1] // 2)
+    image_center=find_concentric_circle_center(centers)
+    # image_center = (img_size[0] // 2, img_size[1] // 2)
     distances = [np.linalg.norm(np.array(center) - np.array(image_center)) for center in centers]
     sorted_microlens_params = [microlens_params[i] for i in np.argsort(distances)]
     sorted_distances = [distances[i] for i in np.argsort(distances)]
     kmeans = KMeans(n_clusters=rings_number)
     kmeans.fit(np.array(sorted_distances).reshape(-1, 1))
     cluster_labels = kmeans.labels_
+    
     for i, microlens in enumerate(sorted_microlens_params):
         microlens["ring"] = cluster_labels[i]
-    return sorted_microlens_params
+
+    return rename_labels(sorted_microlens_params)
+
+
 
 def measure_line_data(center,radius,theta, data):
     start_x = int(center[0] - radius * np.cos(np.radians(theta)))
