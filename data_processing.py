@@ -4,8 +4,10 @@ from scipy.ndimage import label
 import cv2
 from sklearn.cluster import KMeans
 import numpy as np
-from scipy.optimize import minimize
-
+# from scipy.optimize import minimize
+import random
+# from collections import Counter
+import matplotlib.pyplot as plt
 
 
 def read_data(filename, blank_value=-15):
@@ -51,10 +53,10 @@ def microlens_centers_radius(regions):
 
 def rename_labels(sorted_microlens_params):
     # Find all unique ring values
-    unique_rings = sorted(set(param["ring"] for param in sorted_microlens_params))
+    unique_rings =list(dict.fromkeys([param["ring"] for param in sorted_microlens_params]))
 
     # Create a mapping from old ring values to new ones
-    ring_mapping = {old: new for new, old in enumerate(unique_rings, start=1)}
+    ring_mapping = {old: new for new, old in enumerate(unique_rings)}
 
     # Update the ring values
     for param in sorted_microlens_params:
@@ -62,10 +64,6 @@ def rename_labels(sorted_microlens_params):
 
     return sorted_microlens_params
 
-import numpy as np
-import random
-from collections import Counter
-import matplotlib.pyplot as plt
 
 def distance(p1, p2):
     """Calculate the Euclidean distance between two points."""
@@ -131,12 +129,17 @@ def find_concentric_circle_center(circle_centers, iterations=1000, radius_thresh
     top_weighted_centers = sorted(weighted_centers, key=lambda x: x[1], reverse=True)
     return top_weighted_centers[0][0]
 
-def cluster_rings(microlens_params,max_ring = 6,threshold=10):
-    # img_size=microlenses[0].shape
+def cluster_rings(
+        microlens_params,
+        max_ring = 6,
+        threshold=10,
+        iterations=1000, 
+        radius_threshold=2, 
+        max_alpha=1.0,
+        plot=False):
     centers = [microlens["center"] for microlens in microlens_params]
-    image_center=find_concentric_circle_center(centers)
-    # print(image_center)
-    # image_center = (img_size[0] // 2, img_size[1] // 2)
+    image_center=find_concentric_circle_center(
+        centers,iterations=iterations, radius_threshold=radius_threshold, max_alpha=max_alpha,plot=plot)
     distances = [np.linalg.norm(np.array(center) - np.array(image_center)) for center in centers]
     sorted_microlens_params = [microlens_params[i] for i in np.argsort(distances)]
     sorted_distances = [distances[i] for i in np.argsort(distances)]
@@ -179,16 +182,16 @@ def measure_one_microlens(microlens_params, id, data,N_line=6,N_point=101):
     center = microlens_params[id]["center"]
     radius = microlens_params[id]["radius"]*2
     line_datas=[]
-    for theta in np.arange(0,180,20):
+    for theta in np.arange(0,180,N_line):
         line_data=measure_line_data(center,radius,theta, data)
-        x_interp, y_interp=interp_data(line_data,radius,N=101)
+        x_interp, y_interp=interp_data(line_data,radius,N=N_point)
         line_datas.append(y_interp)
     line_datas=np.array(line_datas)
     line_datas_mean=np.mean(line_datas,axis=0)
     line_datas_std=np.std(line_datas,axis=0)
     return x_interp,line_datas_mean,line_datas_std
 
-def measure_one_ring(sample_microlens_id,microlens_params,data,N_line=6,N_point=101):
+def measure_one_ring(sample_microlens_id,microlens_params,data,N_line=20,N_point=101):
     ring_id=microlens_params[sample_microlens_id]['ring']
     microlens_ids=[i for i in range(len(microlens_params)) if microlens_params[i]["ring"]==ring_id]
 
