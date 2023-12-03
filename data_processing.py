@@ -129,12 +129,13 @@ def find_concentric_circle_center(circle_centers, iterations=1000, radius_thresh
         plt.legend()
         plt.show()
     top_weighted_centers = sorted(weighted_centers, key=lambda x: x[1], reverse=True)
-    return top_weighted_centers[0]
+    return top_weighted_centers[0][0]
 
-def cluster_rings(microlens_params, microlenses,rings_number = 4):
-    img_size=microlenses[0].shape
+def cluster_rings(microlens_params,rings_number = 4):
+    # img_size=microlenses[0].shape
     centers = [microlens["center"] for microlens in microlens_params]
     image_center=find_concentric_circle_center(centers)
+    # print(image_center)
     # image_center = (img_size[0] // 2, img_size[1] // 2)
     distances = [np.linalg.norm(np.array(center) - np.array(image_center)) for center in centers]
     sorted_microlens_params = [microlens_params[i] for i in np.argsort(distances)]
