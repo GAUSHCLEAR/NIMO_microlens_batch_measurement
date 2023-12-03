@@ -131,7 +131,7 @@ def find_concentric_circle_center(circle_centers, iterations=1000, radius_thresh
     top_weighted_centers = sorted(weighted_centers, key=lambda x: x[1], reverse=True)
     return top_weighted_centers[0][0]
 
-def cluster_rings(microlens_params,rings_number = 4):
+def cluster_rings(microlens_params,max_ring = 6,threshold=10):
     # img_size=microlenses[0].shape
     centers = [microlens["center"] for microlens in microlens_params]
     image_center=find_concentric_circle_center(centers)
@@ -140,9 +140,16 @@ def cluster_rings(microlens_params,rings_number = 4):
     distances = [np.linalg.norm(np.array(center) - np.array(image_center)) for center in centers]
     sorted_microlens_params = [microlens_params[i] for i in np.argsort(distances)]
     sorted_distances = [distances[i] for i in np.argsort(distances)]
-    kmeans = KMeans(n_clusters=rings_number)
-    kmeans.fit(np.array(sorted_distances).reshape(-1, 1))
-    cluster_labels = kmeans.labels_
+    
+    for k in range(1,max_ring+1):
+        kmeans = KMeans(n_clusters=k)
+        kmeans.fit(np.array(sorted_distances).reshape(-1, 1))
+        cluster_labels = kmeans.labels_
+        inertia_=kmeans.inertia_
+        print("k=",k,"inertia_=",inertia_)
+        if inertia_ < threshold:
+            # print("rings=",k)
+            break 
     
     for i, microlens in enumerate(sorted_microlens_params):
         microlens["ring"] = cluster_labels[i]
