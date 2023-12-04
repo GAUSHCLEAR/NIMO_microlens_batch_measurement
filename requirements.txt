@@ -1,0 +1,8 @@
+cv2
+python-markdown
+weasyprint
+numpy
+matplotlib
+scipy
+sklearn
+fontconfig

@@ -131,6 +131,7 @@ def find_concentric_circle_center(circle_centers, iterations=1000, radius_thresh
 
 def cluster_rings(
         microlens_params,
+        ring_num=None,
         max_ring = 6,
         threshold=10,
         iterations=1000, 
@@ -144,15 +145,20 @@ def cluster_rings(
     sorted_microlens_params = [microlens_params[i] for i in np.argsort(distances)]
     sorted_distances = [distances[i] for i in np.argsort(distances)]
     
-    for k in range(1,max_ring+1):
-        kmeans = KMeans(n_clusters=k)
+    if ring_num is None:
+        for k in range(1,max_ring+1):
+            kmeans = KMeans(n_clusters=k)
+            kmeans.fit(np.array(sorted_distances).reshape(-1, 1))
+            cluster_labels = kmeans.labels_
+            inertia_=kmeans.inertia_
+            print("k=",k,"inertia_=",inertia_)
+            if inertia_ < threshold:
+                # print("rings=",k)
+                break 
+    else:
+        kmeans = KMeans(n_clusters=ring_num)
         kmeans.fit(np.array(sorted_distances).reshape(-1, 1))
         cluster_labels = kmeans.labels_
-        inertia_=kmeans.inertia_
-        print("k=",k,"inertia_=",inertia_)
-        if inertia_ < threshold:
-            # print("rings=",k)
-            break 
     
     for i, microlens in enumerate(sorted_microlens_params):
         microlens["ring"] = cluster_labels[i]
@@ -178,7 +184,7 @@ def interp_data(line_data,radius,N=101):
     y_interp = np.interp(x_interp, np.arange(len(line_data)), line_data)
     return x_interp-radius,y_interp
 
-def measure_one_microlens(microlens_params, id, data,N_line=6,N_point=101):
+def measure_one_microlens(id, microlens_params, data,N_line=6,N_point=101):
     center = microlens_params[id]["center"]
     radius = microlens_params[id]["radius"]*2
     line_datas=[]
@@ -191,8 +197,8 @@ def measure_one_microlens(microlens_params, id, data,N_line=6,N_point=101):
     line_datas_std=np.std(line_datas,axis=0)
     return x_interp,line_datas_mean,line_datas_std
 
-def measure_one_ring(sample_microlens_id,microlens_params,data,N_line=20,N_point=101):
-    ring_id=microlens_params[sample_microlens_id]['ring']
+def measure_one_ring(ring_id,microlens_params,data,N_line=20,N_point=101):
+    # ring_id=microlens_params[sample_microlens_id]['ring']
     microlens_ids=[i for i in range(len(microlens_params)) if microlens_params[i]["ring"]==ring_id]
 
     radius_in_the_ring=np.array([microlens_params[i]["radius"] for i in microlens_ids])
@@ -200,7 +206,7 @@ def measure_one_ring(sample_microlens_id,microlens_params,data,N_line=20,N_point
     x_interp = np.linspace(-2*max_radius,2*max_radius, N_point)
     line_datas=[]
     for microlens_id in microlens_ids:
-        x,line_data_mean,_=measure_one_microlens(microlens_params,microlens_id,data,N_line=N_line,N_point=N_point)
+        x,line_data_mean,_=measure_one_microlens(microlens_id,microlens_params,data,N_line=N_line,N_point=N_point)
         y_interp = np.interp(x_interp, x, line_data_mean)
         line_datas.append(y_interp)
     y_mean=np.mean(line_datas,axis=0)
