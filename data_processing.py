@@ -8,13 +8,12 @@ import numpy as np
 import random
 # from collections import Counter
 import matplotlib.pyplot as plt
-
-
-def read_data(filename, blank_value=-15):
+def read_data(filename):
     data = np.loadtxt(filename, delimiter=',', skiprows=1)
     data[:, 0] = np.NaN
     data[0, :] = np.NaN
-    data[data < blank_value] = np.NaN
+    blank_value=np.nanmean(data[:10, :10])+0.1
+    data[data <= blank_value] = np.NaN
     return data
 def detect_edge(data,threshold=0.8):
     gradient_x, gradient_y = np.gradient(data)
@@ -43,13 +42,12 @@ def label_microlens(binary_image, min_area=10*10, max_area=30*30):
         circular_image[region] = 1
     return circular_regions, circular_image
 
-def microlens_centers_radius(regions):
-    img_size=regions[0].shape
-    microlens = []
-    for region in regions:
-        center, radius = cv2.minEnclosingCircle(np.argwhere(region))
-        microlens.append({"center": center, "radius": radius})
-    return microlens
+# def microlens_centers_radius(regions):
+#     microlens = []
+#     for region in regions:
+#         center, radius = cv2.minEnclosingCircle(np.argwhere(region))
+#         microlens.append({"center": center, "radius": radius})
+#     return microlens
 
 def rename_labels(sorted_microlens_params):
     # Find all unique ring values
@@ -139,15 +137,16 @@ def cluster_rings(
         max_alpha=1.0,
         plot=False):
     centers = [microlens["center"] for microlens in microlens_params]
-    image_center=find_concentric_circle_center(
-        centers,iterations=iterations, radius_threshold=radius_threshold, max_alpha=max_alpha,plot=plot)
+    # image_center=find_concentric_circle_center(
+    #     centers,iterations=iterations, radius_threshold=radius_threshold, max_alpha=max_alpha,plot=plot)
+    image_center=[600,250]
     distances = [np.linalg.norm(np.array(center) - np.array(image_center)) for center in centers]
     sorted_microlens_params = [microlens_params[i] for i in np.argsort(distances)]
     sorted_distances = [distances[i] for i in np.argsort(distances)]
     
     if ring_num is None:
         for k in range(1,max_ring+1):
-            kmeans = KMeans(n_clusters=k)
+            kmeans = KMeans(n_clusters=k,n_init=10)
             kmeans.fit(np.array(sorted_distances).reshape(-1, 1))
             cluster_labels = kmeans.labels_
             inertia_=kmeans.inertia_
@@ -156,7 +155,7 @@ def cluster_rings(
                 # print("rings=",k)
                 break 
     else:
-        kmeans = KMeans(n_clusters=ring_num)
+        kmeans = KMeans(n_clusters=ring_num,n_init=10)
         kmeans.fit(np.array(sorted_distances).reshape(-1, 1))
         cluster_labels = kmeans.labels_
     

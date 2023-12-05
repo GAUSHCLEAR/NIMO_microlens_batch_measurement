@@ -6,6 +6,27 @@ from data_processing import (
     measure_one_microlens,
     measure_one_ring,
 )
+
+def report_whole_picture(sorted_microlens_params, data,filename,dpi=75):
+    plt.figure(figsize=(10, 10))
+    plt.subplot(121)
+    plt.imshow(data, cmap="gray", interpolation='nearest')
+    plt.axis('off')
+    plt.subplot(122)
+    plt.imshow(data, cmap="gray", interpolation='nearest')
+    # 在microlens_only_image上画圆并标记序号
+    for i, microlens in enumerate(sorted_microlens_params):
+        center_x, center_y = microlens["center"]
+        radius = microlens["radius"]
+        ring=microlens["ring"]
+        # print(ring)
+        ring_color=['r','g','b']
+        plt.gca().add_patch(plt.Circle((center_y, center_x), radius, color='r', fill=False))
+        plt.text(center_y, center_x, str(i+1), color=ring_color[ring % 3], fontsize=6, ha='center', va='center')
+        plt.axis('off')
+    plt.savefig(filename,dpi=dpi,bbox_inches='tight')
+    # plt.show() 
+
 def report_microlens_in_ring(
         id,sorted_microlens_params,data,
         filename, ROI_radius=3,
