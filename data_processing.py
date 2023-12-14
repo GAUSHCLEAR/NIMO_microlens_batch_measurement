@@ -42,12 +42,12 @@ def label_microlens(binary_image, min_area=10*10, max_area=30*30):
         circular_image[region] = 1
     return circular_regions, circular_image
 
-# def microlens_centers_radius(regions):
-#     microlens = []
-#     for region in regions:
-#         center, radius = cv2.minEnclosingCircle(np.argwhere(region))
-#         microlens.append({"center": center, "radius": radius})
-#     return microlens
+def microlens_centers_radius(regions):
+    microlens = []
+    for region in regions:
+        center, radius = cv2.minEnclosingCircle(np.argwhere(region))
+        microlens.append({"center": center, "radius": radius})
+    return microlens
 
 def rename_labels(sorted_microlens_params):
     # Find all unique ring values
@@ -129,17 +129,16 @@ def find_concentric_circle_center(circle_centers, iterations=1000, radius_thresh
 
 def cluster_rings(
         microlens_params,
+        image_center=None,
         ring_num=None,
         max_ring = 6,
-        threshold=10,
-        iterations=1000, 
-        radius_threshold=2, 
-        max_alpha=1.0,
-        plot=False):
+        threshold=10
+        ):
     centers = [microlens["center"] for microlens in microlens_params]
     # image_center=find_concentric_circle_center(
     #     centers,iterations=iterations, radius_threshold=radius_threshold, max_alpha=max_alpha,plot=plot)
-    image_center=[600,250]
+    if image_center is None:
+        image_center=[600,250]
     distances = [np.linalg.norm(np.array(center) - np.array(image_center)) for center in centers]
     sorted_microlens_params = [microlens_params[i] for i in np.argsort(distances)]
     sorted_distances = [distances[i] for i in np.argsort(distances)]
