@@ -4,7 +4,7 @@ from scipy.ndimage import label
 import cv2
 from sklearn.cluster import KMeans
 import numpy as np
-# from scipy.optimize import minimize
+from scipy.optimize import minimize
 import random
 # from collections import Counter
 import matplotlib.pyplot as plt
@@ -135,8 +135,6 @@ def cluster_rings(
         threshold=10
         ):
     centers = [microlens["center"] for microlens in microlens_params]
-    # image_center=find_concentric_circle_center(
-    #     centers,iterations=iterations, radius_threshold=radius_threshold, max_alpha=max_alpha,plot=plot)
     if image_center is None:
         image_center=[600,250]
     distances = [np.linalg.norm(np.array(center) - np.array(image_center)) for center in centers]
@@ -162,6 +160,97 @@ def cluster_rings(
         microlens["ring"] = cluster_labels[i]
 
     return rename_labels(sorted_microlens_params)
+
+## 试图反复两次进行聚类，第一次聚类后，将聚类中心作为新的中心，再次聚类
+## 但是效果不好，还是采用上面的方法
+# def estimate_circle_center(points):
+#     # 初始猜测
+#     x_m = np.mean(points, axis=0)
+
+#     def calc_R(xc, yc):
+#         """计算半径"""
+#         return np.sqrt((points[:,0] - xc)**2 + (points[:,1] - yc)**2)
+
+#     def f_2(c):
+#         """最小化的函数"""
+#         Ri = calc_R(*c)
+#         return np.sum((Ri - Ri.mean())**2)
+
+#     center_estimate = x_m
+#     result = minimize(f_2, center_estimate, method='BFGS')
+#     center = result.x
+
+#     # 确保返回的是一个长度为2的数组或元组
+#     if len(center) == 2:
+#         return center
+#     else:
+#         # 如果返回的不是两个值，则打印错误信息并返回None
+#         print("Error in estimation. Result:", center)
+#         return None
+
+# def cluster_and_get_labels(microlens_params, image_center, ring_num, max_ring, threshold):
+#     centers = [microlens["center"] for microlens in microlens_params]
+#     distances = [np.linalg.norm(np.array(center) - np.array(image_center)) for center in centers]
+#     sorted_indices = np.argsort(distances)
+#     sorted_distances = [distances[i] for i in sorted_indices]
+#     sorted_microlens_params = [microlens_params[i] for i in sorted_indices]
+
+#     if ring_num is None:
+#         for k in range(1, max_ring + 1):
+#             kmeans = KMeans(n_clusters=k, n_init=10)
+#             kmeans.fit(np.array(sorted_distances).reshape(-1, 1))
+#             inertia_ = kmeans.inertia_
+#             print("k=", k, "inertia_=", inertia_)
+#             if inertia_ < threshold:
+#                 break
+#     else:
+#         k = ring_num
+#         kmeans = KMeans(n_clusters=k, n_init=10)
+#         kmeans.fit(np.array(sorted_distances).reshape(-1, 1))
+    
+#     return kmeans.labels_, sorted_indices
+
+# def cluster_rings(microlens_params, image_center=None, ring_num=None, max_ring=6, threshold=10):
+#     if image_center is None:
+#         image_center = [600, 250]
+
+#     # 初次聚类
+#     cluster_labels, sorted_indices = cluster_and_get_labels(microlens_params, image_center, ring_num, max_ring, threshold)
+
+#     # 重新计算每个圆环的圆心
+#     new_centers = []
+#     for k in set(cluster_labels):
+#         cluster_points = np.array([microlens_params[i]["center"] for i in sorted_indices if cluster_labels[i] == k])
+#         if len(cluster_points) > 2:  # 需要至少3个点来确定一个圆
+#             new_center = estimate_circle_center(cluster_points)
+#             new_centers.append(new_center)
+
+#     # 检查 new_centers 中是否有异常值
+#     new_centers = [nc for nc in new_centers if np.all(np.isfinite(nc))]
+
+#     # 如果找到新的圆心，则计算平均位置；否则使用原始 image_center
+#     if new_centers:
+#         new_image_center = np.mean(new_centers, axis=0)
+#     else:
+#         new_image_center = image_center
+
+#     # 使用新的 image_center 重新聚类
+#     cluster_labels, _ = cluster_and_get_labels(microlens_params, new_image_center, ring_num, max_ring, threshold)
+
+#     # 更新微透镜参数并返回
+#     for i, microlens in enumerate(microlens_params):
+#         microlens["ring"] = cluster_labels[i]
+
+#     print("new_image_center", new_image_center)
+
+#     return microlens_params
+
+
+
+
+
+
+
 
 
 
