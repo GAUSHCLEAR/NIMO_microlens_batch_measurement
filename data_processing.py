@@ -247,7 +247,12 @@ def cluster_rings(
 
 
 
-
+def measure_one_microlens_center_area(id, microlens_params, data, radius=10):
+    center = microlens_params[id]["center"]
+    x,y = np.ogrid[-center[0]:data.shape[0]-center[0], -center[1]:data.shape[1]-center[1]]
+    mask = x*x + y*y <= radius*radius
+    sub_data = data[mask]
+    return np.mean(sub_data)
 
 
 
@@ -283,6 +288,8 @@ def measure_one_microlens(id, microlens_params, data,N_line=6,N_point=101):
     line_datas_mean=np.mean(line_datas,axis=0)
     line_datas_std=np.std(line_datas,axis=0)
     return x_interp,line_datas_mean,line_datas_std
+
+
 
 def measure_one_ring(ring_id,microlens_params,data,N_line=20,N_point=101):
     # ring_id=microlens_params[sample_microlens_id]['ring']
