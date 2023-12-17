@@ -306,3 +306,26 @@ def measure_one_ring(ring_id,microlens_params,data,N_line=20,N_point=101):
     y_mean=np.mean(line_datas,axis=0)
     y_std=np.std(line_datas,axis=0)
     return x_interp,y_mean,y_std
+
+def power_check(power,power_color_dict,threshold=0.5):
+    # 检查power与power_color_dict中的key的差值，
+    # 如果差值的绝对值<阈值，就返回power_color_dict中的key, value
+    # 否则返回最接近的key，并返回"warning"
+    for key in power_color_dict.keys():
+        if abs(power-key)<threshold:
+            return key,power_color_dict[key]
+    return min(power_color_dict.keys(), key=lambda x:abs(x-power)), "warning"
+
+def check_all_microlens(sorted_microlens_params,data, power_color_dict,radius=10,threshold=0.5):
+    # 检查所有的microlens的power是否在power_color_dict中
+    # 如果不在，就返回warning
+    # 如果在，就返回power_color_dict中的key, value
+    microlens_params_list=sorted_microlens_params.copy()
+    for id, microlens_params in enumerate(microlens_params_list):
+        power=measure_one_microlens_center_area(id,sorted_microlens_params,data,radius=radius)        
+        round_power,power_color=power_check(power,power_color_dict,threshold=threshold)
+        microlens_params['id']=id
+        microlens_params["measured_power"]=power
+        microlens_params["round_power"]=round_power
+        microlens_params["color"]=power_color
+    return microlens_params_list

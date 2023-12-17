@@ -24,16 +24,40 @@ def draw_figure(canvas, figure):
 # 选择csv文件
 # 选择是内圈，中圈还是外圈
 # 绘图也放在layout里面
-layout = [
+left_column = [
     [sg.Text('选择csv文件')],
     [sg.Input(key='csv_file'), sg.FileBrowse()],
     [sg.Text('选择是内圈，中圈还是外圈')],
     [sg.Radio('内圈', "RADIO1", default=True, key='inner_ring'), sg.Radio('中圈', "RADIO1", key='middle_ring'), sg.Radio('外圈', "RADIO1", key='outer_ring')],
+    [sg.Text('处方焦度'), sg.Input(key='Rx', default_text='-3.00')],
+    [sg.Text('允差'), sg.Input(key='threshold', default_text='0.5')],
+    [sg.Text('加光颜色设定')],
+    [sg.Text('■',background_color="#98D2EB"), sg.Input(key='#98D2EB', default_text='+3.50D')],
+    [sg.Text('■',background_color="#F9EBAE"), sg.Input(key='#F9EBAE', default_text='+4.00D')],
+    [sg.Text('■',background_color="#C5A3FF"), sg.Input(key='#C5A3FF', default_text='+4.50D')],
+    [sg.Text('■',background_color="#FFB1BB"), sg.Input(key='#FFB1BB', default_text='+5.00D')],
+    [sg.Text('■',background_color="#87CEFA"), sg.Input(key='#87CEFA', default_text='+5.50D')],
+    [sg.Text('■',background_color="#FFA500"), sg.Input(key='#FFA500', default_text='+6.00D')],
     [sg.Button('确定'), sg.Button('取消')],
-    [sg.Canvas(key='-CANVAS-')],
-
-
 ]
+
+right_column = [
+    [sg.Canvas(key='-CANVAS-')],
+]
+
+layout = [
+    [
+        sg.Column(left_column),
+        sg.Column(right_column),
+    ]
+]
+power_color_dict={
+    0.5:"#98D2EB",
+    1.0:"#F9EBAE",
+    1.5:"#C5A3FF",
+    2.0:"#FFB1BB",
+    2.5:"#87CEFA",
+}
 
 # 设定窗口
 window = sg.Window('微透镜测量', layout)
@@ -72,7 +96,7 @@ while True:
                 max_ring = ring_num+2,
                 threshold=10)
         print("figure drawing")
-        fig = report_whole_picture(sorted_microlens_params, data, "")
+        fig = report_checked_microlens(sorted_microlens_params, data, power_color_dict,radius=10, dpi=75,threshold=0.2)
         # 检查是否已存在图表，如果是，则先清除
         if 'fig_agg' in locals():
             fig_agg.get_tk_widget().forget()
