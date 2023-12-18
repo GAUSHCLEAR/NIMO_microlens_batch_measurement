@@ -7,37 +7,41 @@ from data_processing import *
 from report_processing import *
 import os 
 
+sg.theme('SystemDefaultForReal')   # Add a touch of color
 os.environ['OMP_NUM_THREADS'] = '1'
-
-# 超参数
-image_center=(224,220)
-ring_num=4
+add_power_list=[3,3.5,4,4.5,5,5.5]
 
 # 创建一个绘图函数
 def draw_figure(canvas, figure):
+    figure.patch.set_facecolor('none')
     figure_canvas_agg = FigureCanvasTkAgg(figure, canvas)
     figure_canvas_agg.draw()
     figure_canvas_agg.get_tk_widget().pack(side='top', fill='both', expand=1)
     return figure_canvas_agg
+
+def build_addpower_color_list(add_power_list):
+    color_list=["#98D2EB","#F9EBAE","#C5A3FF","#FFB1BB","#87CEFA","#FFA500"]
+    choose_color_list=color_list[:len(add_power_list)]
+    addpower_color_dict=dict(zip(add_power_list,choose_color_list))
+    color_layout_list=[[sg.Text('■',background_color=color,text_color=color,size=(10,1) ), sg.Input(key=color, default_text=f"{addpower:.2f}")] for addpower,color in addpower_color_dict.items()]
+    return color_layout_list,addpower_color_dict
+
+color_layout_list,addpower_color_dict=build_addpower_color_list(add_power_list)
 
 # 设定layout
 # 选择csv文件
 # 选择是内圈，中圈还是外圈
 # 绘图也放在layout里面
 left_column = [
-    [sg.Text('选择csv文件')],
+    [sg.Text('1. 选择csv文件')],
     [sg.Input(key='csv_file'), sg.FileBrowse()],
-    [sg.Text('选择是内圈，中圈还是外圈')],
+    [sg.Text('2. 选择是内圈，中圈还是外圈')],
     [sg.Radio('内圈', "RADIO1", default=True, key='inner_ring'), sg.Radio('中圈', "RADIO1", key='middle_ring'), sg.Radio('外圈', "RADIO1", key='outer_ring')],
-    [sg.Text('处方焦度'), sg.Input(key='Rx', default_text='-3.00')],
-    [sg.Text('允差'), sg.Input(key='threshold', default_text='0.5')],
-    [sg.Text('加光颜色设定')],
-    [sg.Text('■',background_color="#98D2EB"), sg.Input(key='#98D2EB', default_text='+3.50D')],
-    [sg.Text('■',background_color="#F9EBAE"), sg.Input(key='#F9EBAE', default_text='+4.00D')],
-    [sg.Text('■',background_color="#C5A3FF"), sg.Input(key='#C5A3FF', default_text='+4.50D')],
-    [sg.Text('■',background_color="#FFB1BB"), sg.Input(key='#FFB1BB', default_text='+5.00D')],
-    [sg.Text('■',background_color="#87CEFA"), sg.Input(key='#87CEFA', default_text='+5.50D')],
-    [sg.Text('■',background_color="#FFA500"), sg.Input(key='#FFA500', default_text='+6.00D')],
+    [sg.Text('3. 测量参数')],
+    [sg.Text('处方焦度',size=(10,1)), sg.Input(key='Rx')],
+    [sg.Text('允差',size=(10,1)), sg.Input(key='measure_threshold', default_text='0.5')],
+    [sg.Text('测量直径',size=(10,1)), sg.Input(key='diameter', default_text='0.7')],
+    [sg.Text('4. 加光颜色设定')]]+color_layout_list+[
     [sg.Button('确定'), sg.Button('取消')],
 ]
 
@@ -51,13 +55,6 @@ layout = [
         sg.Column(right_column),
     ]
 ]
-power_color_dict={
-    0.5:"#98D2EB",
-    1.0:"#F9EBAE",
-    1.5:"#C5A3FF",
-    2.0:"#FFB1BB",
-    2.5:"#87CEFA",
-}
 
 # 设定窗口
 window = sg.Window('微透镜测量', layout)
@@ -67,10 +64,30 @@ while True:
     event, values = window.read()
     if event in (None, '取消'):
         break
-    if event == '确定':
+    if event == '确定' :
+        # filename  
         filename=values['csv_file']
+        if not os.path.exists(filename):
+            sg.popup("文件不存在")
+            continue
 
         data = read_data(filename)
+        point_per_mm=data.shape[0]/17 # 17mm
+        mm_per_point=1/point_per_mm
+
+        # power_color_dict
+        Rx=float(values['Rx']) if values['Rx'] else 0.00
+        color_value_list=[float(values[color]) if values[color] else addpower for addpower,color in addpower_color_dict.items()]
+        power_color_dict={
+            Rx+color_value:color for color,color_value in zip(addpower_color_dict.values(),color_value_list)
+        }
+
+        # measure_threshold
+        measure_threshold=float(values['measure_threshold']) if values['measure_threshold'] else 0.5
+        # diameter
+        diameter=float(values['diameter']) if values['diameter'] else 0.7 
+        semi_diameter=diameter/2 * point_per_mm
+
         if values['inner_ring']:
             image_center=(220,220)
             ring_num=4
@@ -80,6 +97,9 @@ while True:
         elif values['outer_ring']:
             image_center=(1000,220)
             ring_num=14
+
+
+
 
         binary_image = detect_edge(data,threshold=1.0)
         # Apply the function to the binary_image
@@ -96,7 +116,7 @@ while True:
                 max_ring = ring_num+2,
                 threshold=10)
         print("figure drawing")
-        fig = report_checked_microlens(sorted_microlens_params, data, power_color_dict,radius=10, dpi=75,threshold=0.2)
+        fig = report_checked_microlens(sorted_microlens_params, data, power_color_dict,radius=semi_diameter, dpi=75,threshold=measure_threshold)
         # 检查是否已存在图表，如果是，则先清除
         if 'fig_agg' in locals():
             fig_agg.get_tk_widget().forget()

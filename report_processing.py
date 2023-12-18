@@ -11,15 +11,25 @@ import matplotlib.pyplot as plt
 
 def report_checked_microlens(sorted_microlens_params, data, power_color_dict,radius=10, dpi=75,threshold=0.5):
     checked_microlens=check_all_microlens(sorted_microlens_params,data,power_color_dict,radius=radius,threshold=threshold)
-    fig, ax = plt.subplots(figsize=(10, 10), dpi=dpi)
+    fig, ax = plt.subplots(figsize=(6, 5), dpi=dpi)
+    fig.patch.set_facecolor('none')
     ax.imshow(data, cmap="gray", interpolation='nearest')
     ax.axis('off')
     for i, microlens in enumerate(checked_microlens):
         center_x, center_y = microlens["center"]
         radius = microlens["radius"]
         color=microlens["color"] if microlens["color"]!="warning" else "red"
-        ax.add_patch(plt.Circle((center_y, center_x), radius, color=color, fill=False))
-        ax.text(center_y, center_x, str(i), color=color, fontsize=6, ha='center', va='center')
+        alpha=0.4 if microlens["color"]!="warning" else 1.0
+        ax.add_patch(plt.Circle((center_y, center_x), radius, color=color, fill=True,alpha=alpha))
+        ax.text(center_y, center_x, str(i), color="black", fontsize=8, ha='center', va='center')
+    # power_color_dict作为legend
+    # power_color_dict是: {power:color}字典
+    ax.legend(handles=[plt.Circle((0, 0), 0.1, color=color) for color in power_color_dict.values()],
+          labels=[f"{power:.2f} D" for power in power_color_dict.keys()],
+          loc='upper right',
+          fontsize=8,
+          bbox_to_anchor=(1.2, 1))  # 将图例向右移动
+
     return fig
         
 def report_whole_picture(sorted_microlens_params, data, filename, dpi=75):
