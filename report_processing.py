@@ -11,7 +11,8 @@ import matplotlib.pyplot as plt
 
 def report_checked_microlens(sorted_microlens_params, data, power_color_dict,radius=10, dpi=75,threshold=0.5):
     checked_microlens=check_all_microlens(sorted_microlens_params,data,power_color_dict,radius=radius,threshold=threshold)
-    fig, ax = plt.subplots(figsize=(6, 5), dpi=dpi)
+    # fig, ax = plt.subplots(figsize=(6, 5), dpi=dpi)
+    fig,ax=plt.subplots()
     fig.patch.set_facecolor('none')
     ax.imshow(data, cmap="gray", interpolation='nearest')
     ax.axis('off')
@@ -27,8 +28,8 @@ def report_checked_microlens(sorted_microlens_params, data, power_color_dict,rad
     ax.legend(handles=[plt.Circle((0, 0), 0.1, color=color) for color in power_color_dict.values()],
           labels=[f"{power:.2f} D" for power in power_color_dict.keys()],
           loc='upper right',
-          fontsize=8,
-          bbox_to_anchor=(1.2, 1))  # 将图例向右移动
+        #   fontsize=8,
+          bbox_to_anchor=(1.3, 1))  # 将图例向右移动
 
     return fig
         
