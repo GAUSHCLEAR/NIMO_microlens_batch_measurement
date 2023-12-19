@@ -7,6 +7,9 @@ import numpy as np
 from scipy.optimize import minimize
 import random
 # from collections import Counter
+from typing import List, Dict
+from collections import Counter
+
 import matplotlib.pyplot as plt
 def read_data(filename):
     data = np.loadtxt(filename, delimiter=',', skiprows=1)
@@ -329,3 +332,40 @@ def check_all_microlens(sorted_microlens_params,data, power_color_dict,radius=10
         microlens_params["round_power"]=round_power
         microlens_params["color"]=power_color
     return microlens_params_list
+
+def get_most_common_round_power(checked_microlens: List[Dict]) -> Dict[int, float]:
+    ring_round_powers = {}
+    for microlens in checked_microlens:
+        ring = microlens['ring']
+        round_power = microlens['round_power']
+        if ring not in ring_round_powers:
+            ring_round_powers[ring] = []
+        ring_round_powers[ring].append(round_power)
+
+    # Find the most common round power in each ring
+    most_common_round_power = {}
+    for ring, powers in ring_round_powers.items():
+        most_common_power = Counter(powers).most_common(1)[0][0]
+        most_common_round_power[ring] = most_common_power
+
+    return most_common_round_power
+
+def update_microlens_with_common_power(checked_microlens: List[Dict]) -> List[Dict]:
+    """
+    Function to update the checked_microlens list with the most common round_power for each ring.
+    It also changes the color to 'warning' if the microlens' round_power is different from the most common round_power.
+
+    :param checked_microlens: List of dictionaries, each representing a microlens.
+    :return: The updated list of dictionaries with 'most_common_round_power' added and color updated if necessary.
+    """
+    # First, get the most common round power for each ring
+    most_common_round_power = get_most_common_round_power(checked_microlens)
+
+    # Update checked_microlens with the most common round power and change color if necessary
+    for microlens in checked_microlens:
+        ring = microlens['ring']
+        microlens['most_common_round_power'] = most_common_round_power[ring]
+        if microlens['round_power'] != most_common_round_power[ring]:
+            microlens['color'] = 'warning'
+
+    return checked_microlens

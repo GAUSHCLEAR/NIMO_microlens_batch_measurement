@@ -5,12 +5,15 @@ import numpy as np
 from data_processing import (
     measure_one_microlens,
     measure_one_ring,
-    check_all_microlens
+    check_all_microlens,
+    update_microlens_with_common_power,
 )
 import matplotlib.pyplot as plt
 
 def report_checked_microlens(sorted_microlens_params, data, power_color_dict,radius=10, dpi=75,threshold=0.5):
     checked_microlens=check_all_microlens(sorted_microlens_params,data,power_color_dict,radius=radius,threshold=threshold)
+    # checked_microlens = update_microlens_with_common_power(checked_microlens)
+
     # fig, ax = plt.subplots(figsize=(6, 5), dpi=dpi)
     fig,ax=plt.subplots()
     fig.patch.set_facecolor('none')
