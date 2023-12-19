@@ -102,15 +102,15 @@ while True:
 
         if values['inner_ring']:
             image_center=(17/2*point_per_mm,17/2*point_per_mm)
-            print(image_center)
+            # print(image_center)
             ring_num=4
         elif values['middle_ring']:
             image_center=((17/2+11)*point_per_mm,17/2*point_per_mm)
-            print(image_center)
+            # print(image_center)
             ring_num=14
         elif values['outer_ring']:
             image_center=((17/2+16)*point_per_mm,17/2*point_per_mm)
-            print(image_center)
+            # print(image_center)
             ring_num=14
         else:
             sg.popup("请选择是内圈，中圈还是外圈")
@@ -130,7 +130,7 @@ while True:
                 ring_num=ring_num,
                 max_ring = ring_num+2,
                 threshold=10)
-        print("figure drawing")
+        # print("figure drawing")
         fig = report_checked_microlens(sorted_microlens_params, data, power_color_dict,radius=semi_diameter, dpi=75,threshold=measure_threshold)
         # 检查是否已存在图表，如果是，则先清除
         if 'fig_agg' in locals():
