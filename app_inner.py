@@ -131,6 +131,7 @@ while True:
                 max_ring = ring_num+2,
                 threshold=10)
         # print("figure drawing")
+        print(power_color_dict)
         fig = report_checked_microlens(sorted_microlens_params, data, power_color_dict,radius=semi_diameter, dpi=75,threshold=measure_threshold)
         # 检查是否已存在图表，如果是，则先清除
         if 'fig_agg' in locals():
@@ -138,7 +139,10 @@ while True:
             plt.close('all')
 
         # 将图表绘制到PySimpleGUI窗口中
-        fig_agg = draw_figure(window['-CANVAS-'].TKCanvas, fig)
-
+        try:
+            fig_agg = draw_figure(window['-CANVAS-'].TKCanvas, fig)
+        except Exception as e:
+            error_str = traceback.format_exc()  # 将 traceback 信息格式化为字符串
+            sg.popup('发生错误', error_str)  # 使用 sg.popup 显示错误信息
         # break
 window.close()

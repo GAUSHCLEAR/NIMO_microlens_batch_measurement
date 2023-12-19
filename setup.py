@@ -3,8 +3,7 @@ import sys
 
 # 依赖项
 build_exe_options = {
-    "packages": ["os", "random", "numpy", "matplotlib", "scipy", "cv2", "sklearn"],
-    # "excludes": ["tkinter"],
+    "packages": ["os", "random", "numpy", "matplotlib", "scipy", "cv2", "sklearn","typing","collections","PySimpleGUI","warnings","tkinter","traceback"],
     "include_files": []  # 如果有需要包含的数据文件或资源，可以在这里指定
 }
 
