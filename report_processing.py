@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import traceback
-import PySimpleGUI as sg
+# import PySimpleGUI as sg
 
 import numpy as np
 from data_processing import (
@@ -37,8 +37,9 @@ def report_checked_microlens(sorted_microlens_params, data, power_color_dict,rad
             #   fontsize=8,
             bbox_to_anchor=(1.3, 1))  # 将图例向右移动
     except:
-        error_str = traceback.format_exc()
-        sg.popup('发生错误', error_str)
+        pass 
+        # error_str = traceback.format_exc()
+        # sg.popup('发生错误', error_str)
     return fig
         
 def report_whole_picture(sorted_microlens_params, data, filename, dpi=75):
