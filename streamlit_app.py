@@ -55,11 +55,9 @@ if st.sidebar.button('确定') and filename is not None:
         ring_num=4
     elif ring_choice == '中圈':
         image_center=((17/2+11)*point_per_mm,17/2*point_per_mm)
-        # print(image_center)
         ring_num=14
     elif ring_choice == '外圈':
         image_center=((17/2+16)*point_per_mm,17/2*point_per_mm)
-        # print(image_center)
         ring_num=14
     else:
         pass 
@@ -81,8 +79,15 @@ if st.sidebar.button('确定') and filename is not None:
     power_color_dict={
             Rx+color_value:color for color,color_value in color_value_dict.items()
         }
-    print(power_color_dict)
-    fig = report_checked_microlens(sorted_microlens_params, data, power_color_dict,radius=semi_diameter, dpi=75,threshold=measure_threshold)    # ... your plotting code ...
+    fig,checked_microlens = report_checked_microlens(sorted_microlens_params, data, power_color_dict,radius=semi_diameter, dpi=75,threshold=measure_threshold)    # ... your plotting code ...
     st.pyplot(fig)
+    # 从checked_microlens挑选出color='warning'的microlens
+    # 找到它们的id
+    # 逐一绘制report_one_microlens(id,sorted_microlens_params,data,radius, mm_per_point, N_line=6,N_point=100)
+    warning_id=[i for i,microlens in enumerate(checked_microlens) if microlens["color"]=="warning"]
+    for id in warning_id:
+        fig=report_one_microlens(id,sorted_microlens_params,data,radius=semi_diameter, mm_per_point=mm_per_point, N_line=6,N_point=100)
+        st.pyplot(fig)
+
 
 # Add more elements as needed

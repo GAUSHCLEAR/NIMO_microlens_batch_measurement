@@ -7,6 +7,7 @@ import numpy as np
 from data_processing import (
     measure_one_microlens,
     measure_one_ring,
+    measure_one_microlens_center_area,
     check_all_microlens,
     update_microlens_with_common_power,
 )
@@ -40,7 +41,7 @@ def report_checked_microlens(sorted_microlens_params, data, power_color_dict,rad
         pass 
         # error_str = traceback.format_exc()
         # sg.popup('发生错误', error_str)
-    return fig
+    return fig,checked_microlens
         
 def report_whole_picture(sorted_microlens_params, data, filename, dpi=75):
     # 创建一个Figure对象
@@ -66,3 +67,21 @@ def report_whole_picture(sorted_microlens_params, data, filename, dpi=75):
     # 返回Figure对象
     return fig
 
+def report_one_microlens(id,sorted_microlens_params,data,radius, mm_per_point, N_line=6,N_point=100):
+    x,y_mean,y_std=measure_one_microlens(id,sorted_microlens_params,data,N_line=N_line,N_point=N_point)
+    x=x*mm_per_point
+    power=measure_one_microlens_center_area(id,sorted_microlens_params,data,radius=radius)
+    fig,ax=plt.subplots()
+    ax.plot(x,y_mean)
+    ax.fill_between(x,y_mean-y_std,y_mean+y_std,alpha=0.5)
+    # 画一条虚线y=power
+    ax.plot([x[0],x[-1]],[power,power],"--")
+    # 在图中虚线上标注power
+    ax.text(x[0],power,f"{power:.2f}D",ha="left",va="bottom")
+    ax.set_xlabel("x/mm")
+    ax.set_ylabel("power")
+    ax.set_title(f"ID={id}, mean power={power:.2f}D")
+    # 画一个矩形框
+    ax.add_patch(plt.Rectangle((-radius*mm_per_point,power-0.5),2*radius*mm_per_point,1,fill=False,linestyle="--"))
+
+    return fig
