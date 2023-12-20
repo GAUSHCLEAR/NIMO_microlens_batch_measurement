@@ -29,7 +29,6 @@ st.sidebar.header('3. 测量参数')
 Rx = st.sidebar.number_input('处方焦度', value=0.0, step=0.01)
 measure_threshold = st.sidebar.number_input('允差', value=0.5, step=0.01)
 diameter = st.sidebar.number_input('测量直径', value=0.7, step=0.01)
-semi_diameter = diameter / 2
 
 st.sidebar.header('4. 加光颜色设定')
 color_value_dict = {}
@@ -47,6 +46,9 @@ if st.sidebar.button('确定') and filename is not None:
     data = read_data(filename)
     point_per_mm=data.shape[0]/17 # 17mm
     mm_per_point=1/point_per_mm
+
+    semi_diameter = diameter / 2 * point_per_mm
+
 
     if ring_choice == '内圈':
         image_center=(17/2*point_per_mm,17/2*point_per_mm)
