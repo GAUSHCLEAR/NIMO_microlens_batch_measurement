@@ -85,9 +85,20 @@ if st.sidebar.button('确定') and filename is not None:
     # 找到它们的id
     # 逐一绘制report_one_microlens(id,sorted_microlens_params,data,radius, mm_per_point, N_line=6,N_point=100)
     warning_id=[i for i,microlens in enumerate(checked_microlens) if microlens["color"]=="warning"]
-    for id in warning_id:
-        fig=report_one_microlens(id,sorted_microlens_params,data,radius=semi_diameter, mm_per_point=mm_per_point, N_line=6,N_point=100)
-        st.pyplot(fig)
+    warning_id_list=warning_id
+    # # 将warning_id显示到text_input中，以逗号分隔
+    # warning_id_str=",".join([str(i) for i in warning_id])
+    # warning_id_strlist=st.text_input("需要关注的微透镜列表",value=warning_id_str)
+    # warning_id_list=[int(i) for i in warning_id_strlist.split(",")]
+    # print(warning_id_list)
+    # if st.button("显示需要关注的微透镜"):
+    if True:
+        # print("显示需要关注的微透镜")
+        # print(warning_id_list)
+        for id in warning_id_list:
+            print(f"绘制微透镜{id}")
+            one_lens_fig=report_one_microlens(id,sorted_microlens_params,data,radius=semi_diameter, mm_per_point=mm_per_point, N_line=6,N_point=100)
+            st.pyplot(one_lens_fig)
 
 
 # Add more elements as needed
