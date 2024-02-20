@@ -24,7 +24,8 @@ def detect_edge(data,threshold=0.8):
     binary_image = np.where(gradient_magnitude >= threshold, 1, 0) 
     return binary_image
 
-def label_microlens(binary_image, min_area=10*10, max_area=30*30):
+def label_microlens(binary_image, 
+                    min_area=10*10, max_area=30*30):
     labeled_image, num_labels = label(1 - binary_image)
     filtered_regions = []
     for label_value in range(1, num_labels + 1):
@@ -45,11 +46,40 @@ def label_microlens(binary_image, min_area=10*10, max_area=30*30):
         circular_image[region] = 1
     return circular_regions, circular_image
 
-def microlens_centers_radius(regions):
+def label_microlens_test(binary_image, 
+                    minRadius, 
+                    maxRadius):
+    labeled_image, num_labels = label(1 - binary_image)
+    filtered_regions = []
+    # no idea why
+    min_area = np.pi * minRadius**2/4 
+    max_area = np.pi * maxRadius**2/4
+    for label_value in range(1, num_labels + 1):
+        region = labeled_image == label_value
+        if min_area < region.sum() < max_area:
+            filtered_regions.append(region)
+    circle_image = cv2.UMat(np.zeros_like(binary_image, dtype=np.uint8))
+    blurred_image = cv2.GaussianBlur(binary_image.astype(np.uint8)*255, (3, 3), 0)
+    circles = cv2.HoughCircles(blurred_image, cv2.HOUGH_GRADIENT, dp=1, minDist=10,param1=50, param2=30, minRadius=int(minRadius), maxRadius=int(maxRadius))
+    if circles is not None:
+        circles = np.uint16(np.around(circles))
+        for circle in circles[0, :]:
+            center_x, center_y, radius = circle
+            cv2.circle(circle_image, (center_x, center_y), radius, 1, thickness=-1)
+    circular_regions = [region for region in filtered_regions if circle_image.get()[region].sum() > 0]
+    circular_image = np.zeros_like(binary_image)
+    for region in circular_regions:
+        circular_image[region] = 1
+    return circular_regions, circular_image
+
+def microlens_centers_radius(regions,
+        min_radius=5,
+        max_radius=15,):
     microlens = []
     for region in regions:
         center, radius = cv2.minEnclosingCircle(np.argwhere(region))
-        microlens.append({"center": center, "radius": radius})
+        if min_radius < radius < max_radius:
+            microlens.append({"center": center, "radius": radius})
     return microlens
 
 def rename_labels(sorted_microlens_params):
