@@ -7,6 +7,7 @@ import numpy as np
 from data_processing import (
     measure_one_microlens,
     measure_one_ring,
+    measure_one_microlens_max,
     measure_one_microlens_center_area,
     check_all_microlens,
     update_microlens_with_common_power,
@@ -85,3 +86,46 @@ def report_one_microlens(id,sorted_microlens_params,data,radius, mm_per_point, N
     ax.add_patch(plt.Rectangle((-radius*mm_per_point,power-0.5),2*radius*mm_per_point,1,fill=False,linestyle="--"))
 
     return fig
+
+def parse_number_range(s: str):
+    result = []  # 结果列表
+    parts = s.split(",")  # 以逗号分割字符串
+    for part in parts:
+        if '-' in part:  # 如果部分包含短划线，表示这是一个范围
+            start, end = map(int, part.split('-'))  # 分割起始和结束值并转换为整数
+            result.extend(range(start, end + 1))  # 将范围内的所有数字添加到结果列表中
+        else:
+            result.append(int(part))  # 如果不包含短划线，直接添加数字
+    return result
+
+def measure_list_of_microlens(ring_number_list,
+    point_per_mm,sorted_microlens_params,data):
+    report_text="|测量直径|平均值|标准差|\n|---|---|---|\n"
+    mean_list=[]
+    std_list=[]
+
+    diameter_list=[0.7,0.5,0.3,0.1]
+    for d in diameter_list:
+        power_list=[]
+        maxpower_list=[]
+        for i in ring_number_list:
+            measure_radius=d/2*point_per_mm
+            power=measure_one_microlens_center_area(i,sorted_microlens_params,data,radius=measure_radius)
+
+            max_power=measure_one_microlens_max(i,sorted_microlens_params,data,radius=measure_radius)
+
+            power_list.append(power)
+            maxpower_list.append(max_power)
+            # fig.show()
+
+        mean_power=np.mean(power_list)
+        std_power=np.std(power_list)
+        max_power_mean=np.mean(maxpower_list)
+        max_power_std=np.std(maxpower_list)
+
+        mean_list.append(mean_power)
+        std_list.append(std_power)
+        report_text+=f"|{d}|{mean_power:.3f}|{std_power:.3f}\n"
+    report_text+=f"|0.0|{max_power_mean:.3f}|{max_power_std:.3f}\n"
+    return report_text
+

@@ -287,6 +287,13 @@ def measure_one_microlens_center_area(id, microlens_params, data, radius=10):
     sub_data = data[mask]
     return np.mean(sub_data)
 
+def measure_one_microlens_max(id, microlens_params, data, radius=10):
+    center = microlens_params[id]["center"]
+    x,y = np.ogrid[-center[0]:data.shape[0]-center[0], -center[1]:data.shape[1]-center[1]]
+    mask = x*x + y*y <= radius*radius
+    sub_data = data[mask]
+    return np.max(sub_data)
+
 
 
 

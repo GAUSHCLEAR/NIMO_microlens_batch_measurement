@@ -40,6 +40,10 @@ for addpower, color in addpower_color_dict.items():
     color_value_dict[color] = color_value
 # Main Panel
 # st.title('微透镜测量')
+st.sidebar.header('5. 一组微透镜测量')
+ring_number_list=st.sidebar.text_input("需要测量的微透镜列表",value="0,1,3-10")
+if ring_number_list:
+    ring_number_list=parse_number_range(ring_number_list)
 
 # Process and display data
 if st.sidebar.button('确定') and filename is not None:
@@ -74,6 +78,10 @@ if st.sidebar.button('确定') and filename is not None:
                 max_ring = ring_num+2,
                 threshold=10)
 
+    # report
+    report=measure_list_of_microlens(ring_number_list,
+    point_per_mm,sorted_microlens_params,data)
+    st.markdown(report)
 
     # Display the figure using st.pyplot
     power_color_dict={
