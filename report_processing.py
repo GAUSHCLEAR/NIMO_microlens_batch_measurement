@@ -14,7 +14,7 @@ from data_processing import (
 )
 import matplotlib.pyplot as plt
 
-def report_checked_microlens(sorted_microlens_params, data, power_color_dict,radius=10, dpi=75,threshold=0.5):
+def report_checked_microlens(sorted_microlens_params, data, power_color_dict,radius=10, dpi=75,Rx=0,threshold=0.5):
     try:
         checked_microlens=check_all_microlens(sorted_microlens_params,data,power_color_dict,radius=radius,threshold=threshold)
         # checked_microlens = update_microlens_with_common_power(checked_microlens)
@@ -34,10 +34,10 @@ def report_checked_microlens(sorted_microlens_params, data, power_color_dict,rad
         # power_color_dict作为legend
         # power_color_dict是: {power:color}字典
         ax.legend(handles=[plt.Circle((0, 0), 0.1, color=color) for color in power_color_dict.values()],
-            labels=[f"{power:.2f} D" for power in power_color_dict.keys()],
+            labels=[f"add {power-Rx:.2f} D" for power in power_color_dict.keys()],
             loc='upper right',
             #   fontsize=8,
-            bbox_to_anchor=(1.3, 1))  # 将图例向右移动
+            bbox_to_anchor=(1.4, 1))  # 将图例向右移动
     except:
         pass 
         # error_str = traceback.format_exc()
@@ -99,8 +99,8 @@ def parse_number_range(s: str):
     return result
 
 def measure_list_of_microlens(ring_number_list,
-    point_per_mm,sorted_microlens_params,data):
-    report_text="|测量直径|平均值|标准差|\n|---|---|---|\n"
+    point_per_mm,sorted_microlens_params,data,Rx):
+    report_text=f"|测量直径|平均值|加光(Rx={Rx})|标准差|\n|---|---|---|---|\n"
     mean_list=[]
     std_list=[]
 
@@ -125,7 +125,7 @@ def measure_list_of_microlens(ring_number_list,
 
         mean_list.append(mean_power)
         std_list.append(std_power)
-        report_text+=f"|{d}|{mean_power:.3f}|{std_power:.3f}\n"
-    report_text+=f"|0.0|{max_power_mean:.3f}|{max_power_std:.3f}\n"
+        report_text+=f"|{d}|{mean_power:.3f}|{mean_power-Rx:.3f}|{std_power:.3f}\n"
+    report_text+=f"|0.0|{max_power_mean:.3f}|{max_power_mean-Rx:.3f}|{max_power_std:.3f}\n"
     return report_text
 

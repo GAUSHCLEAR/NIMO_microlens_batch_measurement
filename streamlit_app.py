@@ -7,10 +7,11 @@ import warnings
 warnings.filterwarnings('ignore')
 
 st.set_page_config(page_title='微透镜测量', layout='wide')
-add_power_list = [3, 3.5, 4, 4.5, 5, 5.5]
+add_power_list = [4.5, 5, 5.5, 6, 6.5, 7]
 
 def build_addpower_color_list(add_power_list):
-    color_list = ["#98D2EB", "#F9EBAE", "#C5A3FF", "#FFB1BB", "#87CEFA", "#FFA500"]
+    # color_list = ["#98D2EB", "#F9EBAE", "#C5A3FF", "#FFB1BB", "#87CEFA", "#FFA500"]
+    color_list = ['#FF7F00', '#FFFF00', '#00FF00', '#00FFFF', '#0000FF', '#7F00FF']
     choose_color_list = color_list[:len(add_power_list)]
     addpower_color_dict = dict(zip(add_power_list, choose_color_list))
     return addpower_color_dict
@@ -27,7 +28,7 @@ ring_choice = st.sidebar.radio('2. 选择是内圈，中圈还是外圈', ['内�
 
 st.sidebar.header('3. 测量参数')
 Rx = st.sidebar.number_input('处方焦度', value=0.0, step=0.01)
-measure_threshold = st.sidebar.number_input('允差', value=0.5, step=0.01)
+measure_threshold = st.sidebar.number_input('允差', value=0.25, step=0.01)
 diameter = st.sidebar.number_input('测量直径', value=0.7, step=0.01)
 
 st.sidebar.header('4. 加光颜色设定')
@@ -80,14 +81,14 @@ if st.sidebar.button('确定') and filename is not None:
 
     # report
     report=measure_list_of_microlens(ring_number_list,
-    point_per_mm,sorted_microlens_params,data)
+    point_per_mm,sorted_microlens_params,data,Rx)
     st.markdown(report)
 
     # Display the figure using st.pyplot
     power_color_dict={
             Rx+color_value:color for color,color_value in color_value_dict.items()
         }
-    fig,checked_microlens = report_checked_microlens(sorted_microlens_params, data, power_color_dict,radius=semi_diameter, dpi=75,threshold=measure_threshold)    # ... your plotting code ...
+    fig,checked_microlens = report_checked_microlens(sorted_microlens_params, data, power_color_dict,radius=semi_diameter, dpi=75,Rx=Rx,threshold=measure_threshold)    # ... your plotting code ...
     st.pyplot(fig)
     # 从checked_microlens挑选出color='warning'的microlens
     # 找到它们的id
