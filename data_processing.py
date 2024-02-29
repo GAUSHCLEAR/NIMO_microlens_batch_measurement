@@ -285,14 +285,21 @@ def measure_one_microlens_center_area(id, microlens_params, data, radius=10):
     x,y = np.ogrid[-center[0]:data.shape[0]-center[0], -center[1]:data.shape[1]-center[1]]
     mask = x*x + y*y <= radius*radius
     sub_data = data[mask]
-    return np.mean(sub_data)
+    power = np.mean(sub_data)
+    Rx=microlens_params[id]['Rx']
+    add_power=power-Rx
+    return add_power 
+
 
 def measure_one_microlens_max(id, microlens_params, data, radius=10):
     center = microlens_params[id]["center"]
     x,y = np.ogrid[-center[0]:data.shape[0]-center[0], -center[1]:data.shape[1]-center[1]]
     mask = x*x + y*y <= radius*radius
     sub_data = data[mask]
-    return np.max(sub_data)
+    power= np.max(sub_data)
+    Rx=microlens_params[id]['Rx']
+    add_power=power-Rx
+    return add_power
 
 
 
@@ -315,6 +322,9 @@ def interp_data(line_data,radius,N=101):
     x_interp = np.linspace(0, 2*radius, N)
     y_interp = np.interp(x_interp, np.arange(len(line_data)), line_data)
     return x_interp-radius,y_interp
+
+
+
 
 def measure_one_microlens(id, microlens_params, data,N_line=6,N_point=101):
     center = microlens_params[id]["center"]
@@ -406,3 +416,39 @@ def update_microlens_with_common_power(checked_microlens: List[Dict]) -> List[Di
             microlens['color'] = 'warning'
 
     return checked_microlens
+
+def calculate_each_lens_Rx(data,sorted_microlens_params):
+    # 计算每个微透镜周边的基础镜片的屈光度
+    # 这样可以用来处理基础镜片为柱镜的情况
+    background=data.copy()
+    for microlens in sorted_microlens_params:
+        center=microlens['center']
+        radius=microlens['radius']*1.5
+        # 在background中，把center为中心,radius为半径内的数据替换成np.nan
+        
+        # 创建一个表示半径的二维数组
+        y, x = np.ogrid[-center[0]:background.shape[0]-center[0], -center[1]:background.shape[1]-center[1]]
+        mask = x*x + y*y <= radius*radius
+
+        # 使用这个数组来更新background
+        background[mask] = np.nan
+    for microlens in sorted_microlens_params:
+        center = microlens['center']
+        radius = microlens['radius'] * 3
+
+        # 创建一个表示半径的二维数组
+        y, x = np.ogrid[-center[0]:background.shape[0]-center[0], -center[1]:background.shape[1]-center[1]]
+        mask = x*x + y*y <= radius*radius
+
+        # 创建一个新的掩码，表示background中哪些值不是np.nan
+        not_nan_mask = ~np.isnan(background)
+
+        # 将新的掩码和原来的mask进行逻辑与操作
+        final_mask = mask & not_nan_mask
+
+        # 使用这个结果来计算中位数，用中位数比较稳定
+        if np.any(final_mask):
+            microlens['Rx'] = np.nanmedian(background[final_mask])
+        else:
+            microlens['Rx'] = np.nan
+    return sorted_microlens_params

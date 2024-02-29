@@ -27,7 +27,8 @@ ring_choice = st.sidebar.radio('2. 选择是内圈，中圈还是外圈', ['内�
 
 
 st.sidebar.header('3. 测量参数')
-Rx = st.sidebar.number_input('处方焦度', value=0.0, step=0.01)
+# Rx = st.sidebar.number_input('处方焦度', value=0.0, step=0.01)
+Rx=0.0
 measure_threshold = st.sidebar.number_input('允差', value=0.25, step=0.01)
 diameter = st.sidebar.number_input('测量直径', value=0.7, step=0.01)
 
@@ -60,10 +61,10 @@ if st.sidebar.button('确定') and filename is not None:
         ring_num=4
     elif ring_choice == '中圈':
         image_center=((17/2+11)*point_per_mm,17/2*point_per_mm)
-        ring_num=14
+        ring_num=7
     elif ring_choice == '外圈':
         image_center=((17/2+16)*point_per_mm,17/2*point_per_mm)
-        ring_num=14
+        ring_num=7
     else:
         pass 
     binary_image = detect_edge(data,threshold=1.0)
@@ -78,7 +79,7 @@ if st.sidebar.button('确定') and filename is not None:
                 ring_num=ring_num,
                 max_ring = ring_num+2,
                 threshold=10)
-
+    sorted_microlens_params=calculate_each_lens_Rx(data,sorted_microlens_params)
     # report
     report=measure_list_of_microlens(ring_number_list,
     point_per_mm,sorted_microlens_params,data,Rx)
