@@ -30,6 +30,7 @@ st.sidebar.header('3. 测量参数')
 # Rx = st.sidebar.number_input('处方焦度', value=0.0, step=0.01)
 Rx=0.0
 measure_threshold = st.sidebar.number_input('允差', value=0.25, step=0.01)
+measure_threshold=measure_threshold/2
 diameter = st.sidebar.number_input('测量直径', value=0.7, step=0.01)
 
 st.sidebar.header('4. 加光颜色设定')
