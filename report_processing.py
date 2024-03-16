@@ -106,7 +106,7 @@ def parse_number_range(s: str):
 
 def measure_list_of_microlens(ring_number_list,
     point_per_mm,sorted_microlens_params,data,Rx):
-    report_text=f"|测量直径|平均值|加光(Rx={Rx})|标准差|\n|---|---|---|---|\n"
+    report_text=f"|测量直径|平均值|标准差|周边光焦度|\n|---|---|---|---|\n"
     mean_list=[]
     std_list=[]
 
@@ -116,25 +116,30 @@ def measure_list_of_microlens(ring_number_list,
     for d in diameter_list:
         power_list=[]
         maxpower_list=[]
+        base_power_list=[]
         for i in ring_number_list:
             measure_radius=d/2*point_per_mm
             power=measure_one_microlens_center_area(i,sorted_microlens_params,data,radius=measure_radius)
-
+            
             max_power=measure_one_microlens_max(i,sorted_microlens_params,data,radius=measure_radius)
 
+            base_power=sorted_microlens_params[i]['Rx']
 
             power_list.append(power)
             maxpower_list.append(max_power)
+            
+            base_power_list.append(base_power)
             # fig.show()
 
         mean_power=np.mean(power_list)
         std_power=np.std(power_list)
+        mean_base_power=np.mean(base_power_list)
         max_power_mean=np.mean(maxpower_list)
         max_power_std=np.std(maxpower_list)
 
         mean_list.append(mean_power)
         std_list.append(std_power)
-        report_text+=f"|{d}|{mean_power:.3f}|{mean_power-Rx:.3f}|{std_power:.3f}\n"
+        report_text+=f"|{d}|{mean_power:.3f}|{std_power:.3f}|{mean_base_power:.3f}|\n"
     report_text+=f"|0.0|{max_power_mean:.3f}|{max_power_mean-Rx:.3f}|{max_power_std:.3f}\n"
     return report_text
 

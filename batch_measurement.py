@@ -76,24 +76,30 @@ if st.sidebar.button('确定') and filename is not None:
         for d in diameter_list:
             power_list=[]
             maxpower_list=[]
+            base_power_list=[]
             for i in ring_number_list:
                 measure_radius=d/2*point_per_mm
                 power=measure_one_microlens_center_area(i,sorted_microlens_params,data,radius=measure_radius)
 
                 max_power=measure_one_microlens_max(i,sorted_microlens_params,data,radius=measure_radius)
 
+                base_power=sorted_microlens_params[i]['Rx']
+                # print(base_power)
+
                 power_list.append(power)
                 maxpower_list.append(max_power)
+                base_power_list.append(base_power)
                 # fig.show()
 
             mean_power=np.mean(power_list)
             std_power=np.std(power_list)
             max_power_mean=np.mean(maxpower_list)
             max_power_std=np.std(maxpower_list)
+            mean_base_power=np.mean(base_power_list)
 
             mean_list.append(mean_power)
             std_list.append(std_power)
-            report_text+=f"{d}\t{mean_power:.3f}\t{std_power:.3f}\n" 
+            report_text+=f"{d}\t{mean_power:.3f}\t{std_power:.3f}\t{mean_base_power:.3f}\n" 
         report_text+=f"0.0\t{max_power_mean:.3f}\t{max_power_std:.3f}\n\n"
     
     st.text_area("测量结果",report_text)
