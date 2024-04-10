@@ -5,6 +5,8 @@ from data_processing import *
 from report_processing import *
 import warnings
 warnings.filterwarnings('ignore')
+point_per_mm=26.058823529411764
+
 
 st.set_page_config(page_title='微透镜批量测量', layout='wide')
 
@@ -15,14 +17,25 @@ filename = st.sidebar.file_uploader('1.选择csv文件', type='csv')
 # st.sidebar.header('2. 选择是内圈，中圈还是外圈')
 ring_choice = st.sidebar.radio('2. 选择是内圈，中圈还是外圈', ['内圈', '中圈', '外圈'])
 
+
 if ring_choice == '内圈':
     default_ring_num=2
+    image_center_x = 17/2 
+    image_center_y = 17/2
 elif ring_choice == '中圈':
     default_ring_num=7
+    image_center_x = 17/2
+    image_center_y = 17/2+11
 elif ring_choice == '外圈':
     default_ring_num=7
+    image_center_x = 17/2
+    image_center_y = 17/2+16
 else:
     pass 
+
+
+i_center_y=st.sidebar.number_input('2.1. 设定镜片中心横坐标', value=image_center_y)
+i_center_x=st.sidebar.number_input('2.2. 设定镜片中心纵坐标', value=image_center_x)
 
 ring_num=st.sidebar.number_input('3. 选择测量的微透镜数量', value=default_ring_num, step=1)
 
@@ -33,14 +46,15 @@ if st.sidebar.button('确定') and filename is not None:
     diameter=0.7 
     semi_diameter = diameter / 2 * point_per_mm
 
-    if ring_choice == '内圈':
-        image_center=(17/2*point_per_mm,17/2*point_per_mm)
-    elif ring_choice == '中圈':
-        image_center=((17/2+11)*point_per_mm,17/2*point_per_mm)
-    elif ring_choice == '外圈':
-        image_center=((17/2+16)*point_per_mm,17/2*point_per_mm)
-    else:
-        pass 
+    # if ring_choice == '内圈':
+    #     image_center=(17/2*point_per_mm,17/2*point_per_mm)
+    # elif ring_choice == '中圈':
+    #     image_center=((17/2+11)*point_per_mm,17/2*point_per_mm)
+    # elif ring_choice == '外圈':
+    #     image_center=((17/2+16)*point_per_mm,17/2*point_per_mm)
+    # else:
+    #     pass 
+    image_center=(i_center_x*point_per_mm,i_center_y*point_per_mm)
     binary_image = detect_edge(data,threshold=0.8)
     microlenses, microlens_only_image = label_microlens(
     binary_image,

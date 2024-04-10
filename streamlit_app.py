@@ -25,6 +25,24 @@ filename = st.sidebar.file_uploader('1.选择csv文件', type='csv')
 # st.sidebar.header('2. 选择是内圈，中圈还是外圈')
 ring_choice = st.sidebar.radio('2. 选择是内圈，中圈还是外圈', ['内圈', '中圈', '外圈'])
 
+if ring_choice == '内圈':
+    default_ring_num=2
+    image_center_x = 17/2 
+    image_center_y = 17/2
+elif ring_choice == '中圈':
+    default_ring_num=7
+    image_center_x = 17/2
+    image_center_y = 17/2+11
+elif ring_choice == '外圈':
+    default_ring_num=7
+    image_center_x = 17/2
+    image_center_y = 17/2+16
+else:
+    pass 
+
+
+i_center_y=st.sidebar.number_input('2.1. 设定镜片中心横坐标', value=image_center_y)
+i_center_x=st.sidebar.number_input('2.2. 设定镜片中心纵坐标', value=image_center_x)
 
 st.sidebar.header('3. 测量参数')
 # Rx = st.sidebar.number_input('处方焦度', value=0.0, step=0.01)
