@@ -70,8 +70,8 @@ if st.sidebar.button('确定') and filename is not None:
     fig=report_whole_picture(sorted_microlens_params, data,"",dpi=75)
     st.pyplot(fig)
 
-    # sorted_microlens_params=calculate_each_lens_Rx(data,sorted_microlens_params, fix_raidus=1*point_per_mm)
-    sorted_microlens_params=calculate_each_lens_Rx(data,sorted_microlens_params)
+    sorted_microlens_params=calculate_each_lens_Rx(data,sorted_microlens_params, fix_raidus=0.6*point_per_mm)
+    # sorted_microlens_params=calculate_each_lens_Rx(data,sorted_microlens_params)
 
     ring_number_list_list=[]
     for id, microlens in enumerate(sorted_microlens_params):
