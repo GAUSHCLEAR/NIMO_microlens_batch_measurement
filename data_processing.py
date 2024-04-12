@@ -417,13 +417,16 @@ def update_microlens_with_common_power(checked_microlens: List[Dict]) -> List[Di
 
     return checked_microlens
 
-def calculate_each_lens_Rx(data,sorted_microlens_params):
+def calculate_each_lens_Rx(data,sorted_microlens_params,fix_raidus=None):
     # 计算每个微透镜周边的基础镜片的屈光度
     # 这样可以用来处理基础镜片为柱镜的情况
     background=data.copy()
     for microlens in sorted_microlens_params:
         center=microlens['center']
-        radius=microlens['radius']*1.5
+        if fix_raidus is not None:
+            radius=fix_raidus*1.5
+        else:  
+            radius=microlens['radius']*2
         # 在background中，把center为中心,radius为半径内的数据替换成np.nan
         
         # 创建一个表示半径的二维数组
@@ -434,7 +437,11 @@ def calculate_each_lens_Rx(data,sorted_microlens_params):
         background[mask] = np.nan
     for microlens in sorted_microlens_params:
         center = microlens['center']
-        radius = microlens['radius'] * 3
+        # radius = microlens['radius'] * 3
+        if fix_raidus is not None:
+            radius=fix_raidus*4
+        else:  
+            radius=microlens['radius']*4
 
         # 创建一个表示半径的二维数组
         y, x = np.ogrid[-center[0]:background.shape[0]-center[0], -center[1]:background.shape[1]-center[1]]
@@ -449,6 +456,7 @@ def calculate_each_lens_Rx(data,sorted_microlens_params):
         # 使用这个结果来计算中位数，用中位数比较稳定
         if np.any(final_mask):
             microlens['Rx'] = np.nanmedian(background[final_mask])
+            # microlens['Rx'] = np.nanmean(background[final_mask])
         else:
             microlens['Rx'] = np.nan
     return sorted_microlens_params
