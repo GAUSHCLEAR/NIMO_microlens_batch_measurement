@@ -55,10 +55,10 @@ if st.sidebar.button('确定') and filename is not None:
     # else:
     #     pass 
     image_center=(i_center_x*point_per_mm,i_center_y*point_per_mm)
-    binary_image = detect_edge(data,threshold=1.0)
+    binary_image = detect_edge(data,threshold=0.8)
     microlenses, microlens_only_image = label_microlens(
     binary_image,
-    min_area=15*15,
+    min_area=10*10,
     )
     microlens_params=microlens_centers_radius(microlenses)
     sorted_microlens_params=cluster_rings(
