@@ -43,8 +43,8 @@ def find_best_circle_match_with_rotation_2d(
     best_rotation = None
 
     # Generate a grid of potential circle centers within the range of data_origin points
-    x_min, y_min = np.min(x_origin) - radius, np.min(y_origin) - radius
-    x_max, y_max = np.max(x_origin) + radius, np.max(y_origin) + radius
+    x_min, y_min = np.min(x_origin) - 2*radius, np.min(y_origin) - 2*radius
+    x_max, y_max = np.max(x_origin) + 2*radius, np.max(y_origin) + 2*radius
     grid_x, grid_y = np.meshgrid(np.linspace(x_min, x_max, 50), np.linspace(y_min, y_max, 50))
     grid_centers = np.vstack([grid_x.ravel(), grid_y.ravel()]).T
 
@@ -79,7 +79,8 @@ def find_best_circle_match_with_rotation_2d(
                     best_match_score = match_score
                     best_center = center
                     best_rotation = angle
-
+    best_center = best_center if best_center is not None else np.array([0, 0])
+    best_rotation = best_rotation if best_rotation is not None else 0
     return best_center, best_rotation, best_match_score
 
 def improved_weighted_icp(
@@ -112,7 +113,8 @@ def improved_weighted_icp(
         return weighted_dist
 
     # Optimization to minimize the weighted distance
-    result = minimize(weighted_distance, [0.0, 0.0, 0.0], method='L-BFGS-B')
+    result = minimize(weighted_distance, 
+            [0.0,0.0,0.0], method='L-BFGS-B')
 
     # Final transformation parameters
     final_angle, final_tx, final_ty = result.x
@@ -127,6 +129,8 @@ def improved_weighted_icp(
 def alignment_by_coordinates(x_origin, y_origin, x_measure, y_measure):
     best_center, best_rotation, _ = find_best_circle_match_with_rotation_2d(
         x_origin,y_origin,x_measure,y_measure) 
+    
+    print(f"Initial center: {best_center}, initial rotation: {best_rotation}")
     final_coords, transformation_params = improved_weighted_icp(
         x_origin, y_origin,x_measure, y_measure, 
         best_center, best_rotation)
