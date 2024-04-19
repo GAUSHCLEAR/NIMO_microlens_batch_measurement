@@ -45,7 +45,8 @@ def find_best_circle_match_with_rotation_2d(
     # Generate a grid of potential circle centers within the range of data_origin points
     x_min, y_min = np.min(x_origin) - 2*radius, np.min(y_origin) - 2*radius
     x_max, y_max = np.max(x_origin) + 2*radius, np.max(y_origin) + 2*radius
-    grid_x, grid_y = np.meshgrid(np.linspace(x_min, x_max, 50), np.linspace(y_min, y_max, 50))
+    print(x_min, y_min, x_max, y_max)
+    grid_x, grid_y = np.meshgrid(np.linspace(x_min, x_max, 75), np.linspace(y_min, y_max, 75))
     grid_centers = np.vstack([grid_x.ravel(), grid_y.ravel()]).T
 
     # Array of angles to try for rotation
@@ -127,6 +128,10 @@ def improved_weighted_icp(
     return final_transformation, (final_angle + initial_angle, final_tx + initial_translation[0], final_ty + initial_translation[1])
 
 def alignment_by_coordinates(x_origin, y_origin, x_measure, y_measure):
+    # # 平移到原点
+    # x_measure -= np.mean(x_measure)
+    # x_measure -= np.mean(x_measure)
+
     best_center, best_rotation, _ = find_best_circle_match_with_rotation_2d(
         x_origin,y_origin,x_measure,y_measure) 
     
@@ -189,7 +194,6 @@ def find_best_rotation_angles(
     best_angles = local_minima_angles[labels == best_cluster_index]
 
     return best_angles
-
 
 def evaluate_p_mismatch(
         x_origin,y_origin,p_origin,
@@ -257,3 +261,7 @@ def alignment_by_powers(
         x_measure, y_measure,
         best_angle_for_p)
     return np.array([rotated_x, rotated_y]).T
+
+def find_nearest_index(coordinate_origin, point):
+    distances = np.sum((coordinate_origin - point)**2, axis=1)
+    return np.argmin(distances)

@@ -14,6 +14,11 @@ from data_processing import (
     calculate_each_lens_Rx,
 )
 import matplotlib.pyplot as plt
+from point_set_registration import (
+    alignment_by_coordinates,
+    alignment_by_powers,
+    find_nearest_index,
+)
 
 def report_checked_microlens(sorted_microlens_params, data, power_color_dict,radius=10, dpi=75,Rx=0,threshold=0.5):
     try:
@@ -143,3 +148,53 @@ def measure_list_of_microlens(ring_number_list,
     report_text+=f"|0.0|{max_power_mean:.3f}|{max_power_mean-Rx:.3f}|{max_power_std:.3f}\n"
     return report_text
 
+def measure_microlens_in_diamter(sorted_microlens_params,data
+    ,point_per_mm,diameter_list=[0.7,0.5,0.3,0.1]):
+    for i in range(len(sorted_microlens_params)):
+        for d in diameter_list:
+            measure_radius=d/2*point_per_mm
+            power=measure_one_microlens_center_area(i,sorted_microlens_params,data,radius=measure_radius)
+            max_power=measure_one_microlens_max(i,sorted_microlens_params,data,radius=measure_radius)
+
+            sorted_microlens_params[i][f'power at {d:.1f}']=power
+            sorted_microlens_params[i][f'power at {0.0}']=max_power
+    return sorted_microlens_params
+
+
+
+def align_microlens(sorted_microlens_params,data_origin,point_per_mm):
+    x_measurement = np.array([microlens['center'][1] for microlens in sorted_microlens_params]).T/point_per_mm
+    y_measurement = np.array([microlens['center'][0] for microlens in sorted_microlens_params]).T/point_per_mm
+    p_measurement = np.array([microlens['power at 0.7'] for microlens in sorted_microlens_params]).T
+    x_measurement -= np.mean(x_measurement)
+    y_measurement -= np.mean(y_measurement)
+    aligned_coords=alignment_by_coordinates(
+        data_origin['x'],data_origin['y'],
+        x_measurement,y_measurement
+        )
+    aligned_coords=alignment_by_powers(
+            data_origin['x'],data_origin['y'], data_origin['p'],
+            aligned_coords[:,0], aligned_coords[:,1], p_measurement,
+    ) 
+    return aligned_coords 
+
+def update_microlens_params_after_align(sorted_microlens_params,final_coords,data_origin):
+    id_list = [find_nearest_index(data_origin[['x','y']].to_numpy(), coord) for coord in final_coords]
+    ring_list= data_origin['ring'][id_list].to_list()
+    for i in range(len(ring_list)):
+        sorted_microlens_params[i]['ring']=ring_list[i]
+        sorted_microlens_params[i]['id']=id_list[i]
+    # 按照id_list的升序排序sorted_microlens_params
+    # 排序id_list，并得到索引
+    sorted_id_list = sorted(range(len(id_list)), key=lambda k: id_list[k])
+    # 按照sorted_id_list的顺序，重新排列sorted_microlens_params
+    sorted_microlens_params=[sorted_microlens_params[i] for i in sorted_id_list]
+    return sorted_microlens_params
+
+def report_align_location(data_origin,aligned_coords):
+    fig, ax = plt.subplots(figsize=(10, 10))
+    ax.scatter(data_origin['y'], data_origin['x'], c='blue', label='Origin Data', alpha=0.7, s=80)
+
+    ax.scatter(aligned_coords[:,0], -aligned_coords[:,1], c='red', label='Measured Data (After ICP)', alpha=0.7, s=80)
+    ax.axis('equal')
+    return fig 
