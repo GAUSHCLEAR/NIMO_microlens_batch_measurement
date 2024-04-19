@@ -189,12 +189,96 @@ def update_microlens_params_after_align(sorted_microlens_params,final_coords,dat
     sorted_id_list = sorted(range(len(id_list)), key=lambda k: id_list[k])
     # 按照sorted_id_list的顺序，重新排列sorted_microlens_params
     sorted_microlens_params=[sorted_microlens_params[i] for i in sorted_id_list]
+    for i in range(len(sorted_microlens_params)):
+        power_measured=sorted_microlens_params[i]['power at 0.7']
+        power_origin=data_origin.iloc[sorted_microlens_params[i]['id']]['p']
+        power_diff=power_measured-power_origin
+        sorted_microlens_params[i]['power difference']=power_diff
     return sorted_microlens_params
 
-def report_align_location(data_origin,aligned_coords):
-    fig, ax = plt.subplots(figsize=(10, 10))
-    ax.scatter(data_origin['y'], data_origin['x'], c='blue', label='Origin Data', alpha=0.7, s=80)
+def report_align_location(data_origin,data,aligned_coords,sorted_microlens_params,dpi=75):
+    # 创建一个Figure对象
+    fig, axs = plt.subplots(1, 2, figsize=(10, 5))
 
-    ax.scatter(aligned_coords[:,0], -aligned_coords[:,1], c='red', label='Measured Data (After ICP)', alpha=0.7, s=80)
-    ax.axis('equal')
+    # 绘制第一个子图
+    axs[0].scatter(data_origin['y'], data_origin['x'], c='blue', label='Origin Data', alpha=0.7)
+
+    axs[0].scatter(aligned_coords[:,0], -aligned_coords[:,1], c='red', label='Measured Data (After ICP)', alpha=0.7)
+    axs[0].axis('equal')
+
+    # axs[0].imshow(data, cmap="gray", interpolation='nearest')
+    axs[0].axis('off')
+
+    # 绘制第二个子图
+    axs[1].imshow(data, cmap="gray", interpolation='nearest')
+    axs[1].axis('off')
+
+    # 在第二个子图上画圆并标记序号
+    for i, microlens in enumerate(sorted_microlens_params):
+        center_x, center_y = microlens["center"]
+        radius = microlens["radius"]
+        ring = microlens["ring"]
+        ring_color = ['r', 'g', 'b']
+        axs[1].add_patch(plt.Circle((center_y, center_x), radius, color=ring_color[ring % 3], fill=False))
+        axs[1].text(center_y, center_x, str(i), color=ring_color[ring % 3], fontsize=6, ha='center', va='center')
+
+    # 返回Figure对象
+
+
+    
     return fig 
+
+def analysis_ring(sorted_microlens_params):
+    ring_list = set([microlens['ring'] for microlens in sorted_microlens_params])
+    ring_param_list=[]
+
+    for i,ring in enumerate(ring_list):
+        ring_params={}
+        ring_microlens_params=[microlens for microlens in sorted_microlens_params if microlens['ring']==ring]
+        ring_params['ring']=ring+1
+        ring_params['lens count']=len(ring_microlens_params)
+        ring_params['power at 0.7']=[microlens['power at 0.7'] 
+            for microlens in ring_microlens_params]
+        ring_params['power at 0.3']=[microlens['power at 0.3'] 
+            for microlens in ring_microlens_params]
+        ring_params['power at 0.1']=[microlens['power at 0.1']
+            for microlens in ring_microlens_params]
+        ring_params['power at 0.0']=[microlens['power at 0.0']
+            for microlens in ring_microlens_params]
+        ring_params['Rx']=[microlens['Rx'] for microlens in ring_microlens_params]
+        ring_params['power difference']=[microlens['power difference'] for microlens in ring_microlens_params]
+
+        ring_params['power at 0.7 mean']=np.mean(ring_params['power at 0.7'])
+        ring_params['power at 0.3 mean']=np.mean(ring_params['power at 0.3'])
+        ring_params['power at 0.1 mean']=np.mean(ring_params['power at 0.1'])
+        ring_params['power at 0.0 mean']=np.mean(ring_params['power at 0.0'])
+        ring_params['Rx mean']=np.mean(ring_params['Rx'])
+        ring_params['power difference abs mean']=np.mean(np.abs(ring_params['power difference']))
+
+        ring_params['power at 0.7 std']=np.std(ring_params['power at 0.7'])
+        ring_params['power at 0.3 std']=np.std(ring_params['power at 0.3'])
+        ring_params['power at 0.1 std']=np.std(ring_params['power at 0.1'])
+        ring_params['power at 0.0 std']=np.std(ring_params['power at 0.0'])
+        ring_params['Rx std']=np.std(ring_params['Rx'])
+        ring_params['power difference abs std']=np.std(np.abs(ring_params['power difference']))
+
+        ring_params['power at 0.7 range']=np.max(ring_params['power at 0.7'])-np.min(ring_params['power at 0.7'])
+        ring_params['power at 0.3 range']=np.max(ring_params['power at 0.3'])-np.min(ring_params['power at 0.3'])
+        ring_params['power at 0.1 range']=np.max(ring_params['power at 0.1'])-np.min(ring_params['power at 0.1'])
+        ring_params['power at 0.0 range']=np.max(ring_params['power at 0.0'])-np.min(ring_params['power at 0.0'])
+        ring_params['Rx range']=np.max(ring_params['Rx'])-np.min(ring_params['Rx'])
+        ring_params['power difference abs max']=np.max(np.abs(ring_params['power difference']))
+        ring_param_list.append(ring_params)
+    return ring_param_list
+
+def generate_ring_report(ring_param_list):
+    report_text="" 
+    for ring in ring_param_list:
+        report_text +=f"Ring {ring['ring']}\t Lens Count: {ring['lens count']}\n"
+        report_text +="\tMean\tStd\tRange\n"
+        report_text +=f"0.7\t{ring['power at 0.7 mean']:.3f}\t{ring['power at 0.7 std']:.3f}\t{ring['power at 0.7 range']:.3f}\n"
+        report_text +=f"0.3\t{ring['power at 0.3 mean']:.3f}\t{ring['power at 0.3 std']:.3f}\t{ring['power at 0.3 range']:.3f}\n"
+        report_text +=f"Rx\t{ring['Rx mean']:.3f}\t{ring['Rx std']:.3f}\t{ring['Rx range']:.3f}\n"
+        report_text +=f"diff\t{ring['power difference abs mean']:.3f}\t{ring['power difference abs std']:.3f}\t{ring['power difference abs max']:.3f}\n"
+        report_text +="\n"
+    return(report_text)

@@ -40,9 +40,14 @@ if st.sidebar.button('确定') and (filename_design is not None) and (filename_m
     # 更新微透镜参数
     sorted_microlens_params=update_microlens_params_after_align(sorted_microlens_params,aligned_coords,data_origin)
     # 生成报告
-    fig_align=report_align_location(data_origin,aligned_coords)
-    fig_whole=report_whole_picture(sorted_microlens_params, data,"",dpi=75)
 
-    st.pyplot(fig_whole)
+    fig_align=report_align_location(data_origin,data,aligned_coords,sorted_microlens_params)
+    # fig_whole=report_whole_picture(sorted_microlens_params, data,"",dpi=75)
+
+    # st.pyplot(fig_whole)
     st.pyplot(fig_align)
 
+    ring_param_list=analysis_ring(sorted_microlens_params)
+    report_text=generate_ring_report(ring_param_list)
+
+    st.text_area("测量结果",report_text)
