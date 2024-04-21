@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-import traceback
+# import matplotlib.gridspec as gridspec
+# import traceback
 # import PySimpleGUI as sg
 
 import numpy as np
@@ -282,3 +282,13 @@ def generate_ring_report(ring_param_list):
         report_text +=f"diff\t{ring['power difference abs mean']:.3f}\t{ring['power difference abs std']:.3f}\t{ring['power difference abs max']:.3f}\n"
         report_text +="\n"
     return(report_text)
+
+def generate_report_csv(data_origin,sorted_microlens_params):
+    data_measure=data_origin.copy()
+    for microlens in sorted_microlens_params:
+        data_measure.loc[microlens['id'],'p_measure']=microlens['power at 0.7']
+        data_measure.loc[microlens['id'],'p_diff']=microlens['power difference']
+        data_measure.loc[microlens['id'],'Rx']=microlens['Rx']
+    data_measure_csv = data_measure.to_csv(index=False).encode('utf-8')
+    return data_measure_csv
+
