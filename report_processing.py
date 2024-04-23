@@ -235,7 +235,7 @@ def analysis_ring(sorted_microlens_params):
     for i,ring in enumerate(ring_list):
         ring_params={}
         ring_microlens_params=[microlens for microlens in sorted_microlens_params if microlens['ring']==ring]
-        ring_params['ring']=ring+1
+        ring_params['ring']=ring
         ring_params['lens count']=len(ring_microlens_params)
         ring_params['power at 0.7']=[microlens['power at 0.7'] 
             for microlens in ring_microlens_params]
