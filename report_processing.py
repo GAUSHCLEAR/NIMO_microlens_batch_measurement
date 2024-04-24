@@ -68,8 +68,8 @@ def report_whole_picture(sorted_microlens_params, data, filename, dpi=75):
         radius = microlens["radius"]
         ring = microlens["ring"]
         ring_color = ['r', 'g', 'b']
-        axs[1].add_patch(plt.Circle((center_y, center_x), radius, color=ring_color[ring % 3], fill=False))
-        axs[1].text(center_y, center_x, str(i), color=ring_color[ring % 3], fontsize=6, ha='center', va='center')
+        axs[1].add_patch(plt.Circle((center_y, center_x), radius, color='blue', fill=False))
+        axs[1].text(center_y, center_x, str(i), color='blue', fontsize=6, ha='center', va='center')
 
     # 返回Figure对象
     return fig
@@ -219,8 +219,8 @@ def report_align_location(data_origin,data,aligned_coords,sorted_microlens_param
         radius = microlens["radius"]
         ring = microlens["ring"]
         ring_color = ['r', 'g', 'b']
-        axs[1].add_patch(plt.Circle((center_y, center_x), radius, color=ring_color[ring % 3], fill=False))
-        axs[1].text(center_y, center_x, str(i), color=ring_color[ring % 3], fontsize=6, ha='center', va='center')
+        axs[1].add_patch(plt.Circle((center_y, center_x), radius, color='blue', fill=False))
+        axs[1].text(center_y, center_x, str(i), color='blue', fontsize=6, ha='center', va='center')
 
     # 返回Figure对象
 
@@ -290,5 +290,59 @@ def generate_report_csv(data_origin,sorted_microlens_params):
         data_measure.loc[microlens['id'],'p_diff']=microlens['power difference']
         data_measure.loc[microlens['id'],'Rx']=microlens['Rx']
     data_measure_csv = data_measure.to_csv(index=False).encode('utf-8')
-    return data_measure_csv
+    return data_measure_csv,data_measure
+
+def report_data_measure(data_measure):
+    data_show=data_measure.copy()
+    # 丢弃p_measure中的nan
+    data_show=data_show.dropna(subset=['p_measure'])
+    fig, axs = plt.subplots(2, 2, figsize=(10, 10))
+    x=-data_show['x']
+    y=-data_show['y']
+    max_x=np.max(x)
+    min_x=np.min(x)
+    max_y=np.max(y)
+    min_y=np.min(y)
+    width=max_x-min_x
+    height=max_y-min_y
+    max_dim=max(width,height)
+    x_center=(max_x+min_x)/2
+    y_center=(max_y+min_y)/2
+    min_x=x_center-max_dim/2
+    max_x=x_center+max_dim/2
+    min_y=y_center-max_dim/2
+    max_y=y_center+max_dim/2
+
+
+    p=data_show['p']
+    p_measure=data_show['p_measure']
+    p_diff=data_show['p_diff']
+    Rx=data_show['Rx']
+    axs[0,0].scatter(y,x,c=p)
+    axs[0,0].axis('equal')
+    # 将图片放在正方形区域内
+    axs[0,0].set_xlim(min_y-0.1*max_dim,max_y+0.1*max_dim)
+    axs[0,0].set_ylim(min_x-0.1*max_dim,max_x+0.1*max_dim)
+    axs[0,0].set_title('Design')
+    
+
+    axs[0,1].scatter(y,x,c=p_measure)
+    axs[0,1].axis('equal')
+    axs[0,1].set_xlim(min_y-0.1*max_dim,max_y+0.1*max_dim)
+    axs[0,1].set_ylim(min_x-0.1*max_dim,max_x+0.1*max_dim)
+    axs[0,1].set_title('Measurement')
+
+    im=axs[1,0].scatter(y,x,c=p_diff)
+    axs[1,0].axis('equal')
+    axs[1,0].set_xlim(min_y-0.1*max_dim,max_y+0.1*max_dim)
+    axs[1,0].set_ylim(min_x-0.1*max_dim,max_x+0.1*max_dim)
+    axs[1,0].set_title('Power Difference')
+
+    axs[1, 1].axis('off')
+
+    cax = fig.add_axes([axs[1, 1].get_position().x0 , axs[1, 1].get_position().y0, 0.05, axs[1, 1].get_position().height])
+
+    fig.colorbar(im, cax=cax)
+    return fig
+
 

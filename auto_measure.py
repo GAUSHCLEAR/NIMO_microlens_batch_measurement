@@ -65,13 +65,18 @@ if measure_button and (filename_design is not None) and (filename_measure is not
     if st.session_state['session_state']['report_plot'] is not None:
         st.pyplot(st.session_state['session_state']['report_plot'])
 
-    if st.session_state['session_state']['report_plot'] is not None:
-        st.text_area("测量结果",st.session_state['session_state']['report_text'])
+    
 
     # 保存测量结果
     
-    data_measure_csv = generate_report_csv(data_origin,sorted_microlens_params)
+    data_measure_csv,data_measure = generate_report_csv(data_origin,sorted_microlens_params)
+
+    fig_data_measure=report_data_measure(data_measure)
+    st.pyplot(fig_data_measure)
     
+    if st.session_state['session_state']['report_plot'] is not None:
+        st.text_area("测量结果",st.session_state['session_state']['report_text'])
+        
     st.download_button(
         label="下载测量结果",
         data=data_measure_csv,
