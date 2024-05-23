@@ -1,5 +1,6 @@
 # data
 *.csv
+*.zip
 data/
 test*
 *.htm

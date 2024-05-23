@@ -135,7 +135,7 @@ def alignment_by_coordinates(x_origin, y_origin, x_measure, y_measure):
     best_center, best_rotation, _ = find_best_circle_match_with_rotation_2d(
         x_origin,y_origin,x_measure,y_measure) 
     
-    # print(f"Initial center: {best_center}, initial rotation: {best_rotation}")
+    # c:\Users\goldengrape\OneDrive\文档\jobs\高视\code\microlens_array\4.5D_lower_space_time_7mm_40%_unique_with_power_and_ring_design.csv(f"Initial center: {best_center}, initial rotation: {best_rotation}")
     final_coords, transformation_params = improved_weighted_icp(
         x_origin, y_origin,x_measure, y_measure, 
         best_center, best_rotation)
