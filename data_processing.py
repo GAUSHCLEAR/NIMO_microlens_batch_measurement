@@ -13,10 +13,10 @@ from collections import Counter
 import matplotlib.pyplot as plt
 def read_data(filename):
     data = np.loadtxt(filename, delimiter=',', skiprows=1)
-    data[:, 0] = np.NaN
-    data[0, :] = np.NaN
+    data[:, 0] = np.nan
+    data[0, :] = np.nan
     blank_value=np.nanmean(data[:10, :10])+0.1
-    data[data <= blank_value] = np.NaN
+    data[data <= blank_value] = np.nan
     return data
 def detect_edge(data,threshold=0.8):
     gradient_x, gradient_y = np.gradient(data)
